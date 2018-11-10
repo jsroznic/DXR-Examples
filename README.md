@@ -5,6 +5,8 @@ This repository is derived from the work of Adam Marrs's IntroToDXR repository, 
 
 ![Program Preview](https://github.com/jsroznic/DXR-Examples/blob/master/DXR-Scene.PNG "Output Preview")
 
+![Custom Scene Preview](https://github.com/jsroznic/DXR-Examples/blob/master/DXR-Custom-Scene.PNG "Custom Scene Preview")
+
 ## Requirements
 
 * Windows 10 v1809, "October 2018 Update" (RS5)
