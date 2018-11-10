@@ -58,10 +58,10 @@ namespace D3DResources
 	void Create_Samplers(D3D12Global &d3d, D3D12Resources &resources);
 	void Create_BackBuffer_RTV(D3D12Global &d3d, D3D12Resources &resources);
 	void Create_View_CB(D3D12Global &d3d, D3D12Resources &resources);
-	void Create_Material_CB(D3D12Global &d3d, D3D12Resources &resources, const Material &material);
+	void Create_Lighting_CB(D3D12Global &d3d, D3D12Resources &resources, const Material &material);
 	void Create_Descriptor_Heaps(D3D12Global &d3d, D3D12Resources &resources);
 
-	void Update_View_CB(D3D12Global &d3d, D3D12Resources &resources);
+	void Update_View_CB(D3D12Global &d3d, D3D12Resources &resources, ConfigInfo &config);
 
 	void Destroy(D3D12Resources &resources);
 }

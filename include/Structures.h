@@ -68,11 +68,15 @@ struct Vertex
 	XMFLOAT3 position;
 	XMFLOAT3 color;
 	XMFLOAT3 normal;
+	XMFLOAT3 material;
 
 	bool operator==(const Vertex &v) const {
 		if (CompareVector3WithEpsilon(position, v.position)) {
 			if (CompareVector3WithEpsilon(color, v.color)) {
-				if (CompareVector3WithEpsilon(normal, v.normal)) return true;
+				if (CompareVector3WithEpsilon(normal, v.normal)) {
+					if (CompareVector3WithEpsilon(material, v.normal)) return true;
+					return false;
+				}
 				return false;
 			}
 			return false;
@@ -84,6 +88,7 @@ struct Vertex
 		position = v.position;
 		color = v.color;
 		normal = v.normal;
+		material = v.material;
 		return *this;
 	}
 };
@@ -114,8 +119,8 @@ struct TextureInfo
 	int stride;
 };
 
-struct MaterialCB {
-	XMFLOAT4 resolution;
+struct LightingCB {
+	XMFLOAT4 lightingInformation;
 };
 
 struct ViewCB
@@ -221,9 +226,9 @@ struct D3D12Resources
 	ViewCB											viewCBData;
 	UINT8*											viewCBStart;
 
-	ID3D12Resource*									materialCB;	
-	MaterialCB										materialCBData;	
-	UINT8*											materialCBStart;
+	ID3D12Resource*									lightingCB;	
+	LightingCB										lightingCBData;	
+	UINT8*											lightingCBStart;
 
 	ID3D12DescriptorHeap*							rtvHeap;
 	ID3D12DescriptorHeap*							cbvSrvUavHeap;

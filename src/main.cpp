@@ -54,7 +54,15 @@ public:
 		d3d.height = config.height;
 
 		// Load a model
-		Utils::LoadCustomScene(model, material);
+		//Custom Scene
+		if (config.model == "custom") {
+			Utils::LoadCustomAdvancedScene(model, material);
+		}
+		//Reference Scene
+		else {
+			Utils::LoadCustomScene(model, material);
+		}
+		
 
 		// Initialize the shader compiler
 		D3DShaders::Init_Shader_Compiler(shaderCompiler);
@@ -75,7 +83,7 @@ public:
 		D3DResources::Create_Vertex_Buffer(d3d, resources, model);
 		D3DResources::Create_Index_Buffer(d3d, resources, model);
 		D3DResources::Create_View_CB(d3d, resources);
-		D3DResources::Create_Material_CB(d3d, resources, material);
+		D3DResources::Create_Lighting_CB(d3d, resources, material);
 		
 		// Create DXR specific resources
 		DXR::Create_Bottom_Level_AS(d3d, dxr, resources, model);
@@ -96,9 +104,9 @@ public:
 		D3D12::Reset_CommandList(d3d);
 	}
 	
-	void Update() 
+	void Update(ConfigInfo &config)
 	{
-		D3DResources::Update_View_CB(d3d, resources);
+		D3DResources::Update_View_CB(d3d, resources, config);
 	}
 
 	void Render() 
@@ -167,7 +175,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 				DispatchMessage(&msg);
 			}
 
-			app.Update();
+			app.Update(config);
 			app.Render();
 		}
 

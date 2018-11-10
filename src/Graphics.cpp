@@ -307,16 +307,16 @@ void Create_View_CB(D3D12Global &d3d, D3D12Resources &resources)
 /**
 * Create and initialize the material constant buffer.
 */
-void Create_Material_CB(D3D12Global &d3d, D3D12Resources &resources, const Material &material) 
+void Create_Lighting_CB(D3D12Global &d3d, D3D12Resources &resources, const Material &material) 
 {
-	Create_Constant_Buffer(d3d, &resources.materialCB, sizeof(MaterialCB));
+	Create_Constant_Buffer(d3d, &resources.lightingCB, sizeof(LightingCB));
 
-	resources.materialCBData.resolution = XMFLOAT4(material.textureResolution, 0.f, 0.f, 0.f);
+	resources.lightingCBData.lightingInformation = XMFLOAT4(-3.0f, 5.0f, -15.0f, 0.0f);
 
-	HRESULT hr = resources.materialCB->Map(0, nullptr, reinterpret_cast<void**>(&resources.materialCBStart));
-	Utils::Validate(hr, L"Error: failed to map Material constant buffer!");
+	HRESULT hr = resources.lightingCB->Map(0, nullptr, reinterpret_cast<void**>(&resources.lightingCBStart));
+	Utils::Validate(hr, L"Error: failed to map Lighting constant buffer!");
 
-	memcpy(resources.materialCBStart, &resources.materialCBData, sizeof(resources.materialCBData));
+	memcpy(resources.lightingCBStart, &resources.lightingCBData, sizeof(resources.lightingCBData));
 }
 
 /**
@@ -350,11 +350,12 @@ void Create_Descriptor_Heaps(D3D12Global &d3d, D3D12Resources &resources)
 /**
 * Update the view constant buffer.
 */
-void Update_View_CB(D3D12Global &d3d, D3D12Resources &resources) 
+void Update_View_CB(D3D12Global &d3d, D3D12Resources &resources, ConfigInfo &config)
 {
 	const float rotationSpeed = 0.005f;
 	XMMATRIX view, invView;
 	XMFLOAT3 eye, focus, up;
+	XMFLOAT4 lighting;
 	float aspect, fov;
 
 	resources.eyeAngle.x += rotationSpeed;
@@ -376,6 +377,24 @@ void Update_View_CB(D3D12Global &d3d, D3D12Resources &resources)
 		y = 0;
 		z = 0;
 	}
+
+	//Dynamic Light Source
+	if (config.model == "custom") {
+		lighting = XMFLOAT4(5 * cos(-3 * resources.eyeAngle.x), 1, -5, 0.0f);
+	}
+	else {
+		lighting = XMFLOAT4(5 * cos(-3 * resources.eyeAngle.x), 5, -15, 0.0f);
+	}
+	
+	//Force Static Lighting
+	if (false) {
+		if (config.model == "custom") {
+			lighting = XMFLOAT4(0.0f, 1.0f, -5.0f, 0.0f);
+		}
+		else {
+			lighting = XMFLOAT4(-3.0f, 5.0f, -15.0f, 0.0f);
+		}
+	}
 	focus = XMFLOAT3(0.f, 0.f, -1.f);
 #else
 	float x = 8.f * cosf(resources.eyeAngle.x);
@@ -383,8 +402,6 @@ void Update_View_CB(D3D12Global &d3d, D3D12Resources &resources)
 	float z = 8.f + 2.25f * sinf(resources.eyeAngle.x);
 	focus = XMFLOAT3(0.f, 1.75f, 0.f);
 #endif
-
-	
 
 	eye = XMFLOAT3(x, y, z);
 	up = XMFLOAT3(0.f, 1.f, 0.f);
@@ -401,6 +418,9 @@ void Update_View_CB(D3D12Global &d3d, D3D12Resources &resources)
 	resources.viewCBData.viewOriginAndTanHalfFovY = XMFLOAT4(eye.x, eye.y, eye.z, tanf(fov * 0.5f));
 	resources.viewCBData.resolution = XMFLOAT2((float)d3d.width, (float)d3d.height);
 	memcpy(resources.viewCBStart, &resources.viewCBData, sizeof(resources.viewCBData));
+
+	resources.lightingCBData.lightingInformation = lighting;
+	memcpy(resources.lightingCBStart, &resources.lightingCBData, sizeof(resources.lightingCBData));
 }
 
 /**
@@ -410,8 +430,8 @@ void Destroy(D3D12Resources &resources)
 {
 	if (resources.viewCB) resources.viewCB->Unmap(0, nullptr);
 	if (resources.viewCBStart) resources.viewCBStart = nullptr;
-	if (resources.materialCB) resources.materialCB->Unmap(0, nullptr);
-	if (resources.materialCBStart) resources.materialCBStart = nullptr;
+	if (resources.lightingCB) resources.lightingCB->Unmap(0, nullptr);
+	if (resources.lightingCBStart) resources.lightingCBStart = nullptr;
 
 	SAFE_RELEASE(resources.DXROutput);
 	SAFE_RELEASE(resources.vertexBuffer);
@@ -1184,7 +1204,7 @@ void Create_Pipeline_State_Object(D3D12Global &d3d, DXRGlobal &dxr)
 
 	// Add a state subobject for the ray tracing pipeline config
 	D3D12_RAYTRACING_PIPELINE_CONFIG pipelineConfig = {};
-	pipelineConfig.MaxTraceRecursionDepth = 12;
+	pipelineConfig.MaxTraceRecursionDepth = 22;
 
 	D3D12_STATE_SUBOBJECT pipelineConfigObject = {};
 	pipelineConfigObject.Type = D3D12_STATE_SUBOBJECT_TYPE_RAYTRACING_PIPELINE_CONFIG;
@@ -1297,8 +1317,8 @@ void Create_CBVSRVUAV_Heap(D3D12Global &d3d, DXRGlobal &dxr, D3D12Resources &res
 	d3d.device->CreateConstantBufferView(&cbvDesc, handle);
 
 	// Create the MaterialCB CBV
-	cbvDesc.SizeInBytes = ALIGN(D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT, sizeof(resources.materialCBData));
-	cbvDesc.BufferLocation = resources.materialCB->GetGPUVirtualAddress();
+	cbvDesc.SizeInBytes = ALIGN(D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT, sizeof(resources.lightingCBData));
+	cbvDesc.BufferLocation = resources.lightingCB->GetGPUVirtualAddress();
 
 	handle.ptr += handleIncrement;
 	d3d.device->CreateConstantBufferView(&cbvDesc, handle);

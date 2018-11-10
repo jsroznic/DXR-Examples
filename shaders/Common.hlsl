@@ -45,9 +45,9 @@ cbuffer ViewCB : register(b0)
 	float2 resolution;
 };
 
-cbuffer MaterialCB : register(b1)
+cbuffer LightingCB : register(b1)
 {
-	float4 textureResolution;
+	float4 lightingInformation;
 };
 
 // ---[ Resources ]---
@@ -66,6 +66,7 @@ struct VertexAttributes
 	float3 position;
 	float3 color;
 	float3 normal;
+	float3 material;
 };
 
 uint3 GetIndices(uint triangleIndex)
@@ -82,16 +83,20 @@ VertexAttributes GetVertexAttributes(uint triangleIndex, float3 barycentrics)
 	v.position = float3(0, 0, 0);
 	v.color = float3(0, 0, 0);
 	v.normal = float3(0, 0, 0);
+	v.material = float3(0, 0, 0);
 
 	for (uint i = 0; i < 3; i++)
 	{
-		int address = (indices[i] * 9) * 4;
+		int address = (indices[i] * 12) * 4;
 		v.position += asfloat(vertices.Load3(address)) * barycentrics[i];
 		address += (3 * 4);
 		v.color += asfloat(vertices.Load3(address)) * barycentrics[i];
 		address += (3 * 4);
 		v.normal += asfloat(vertices.Load3(address)) * barycentrics[i];
+		address += (3 * 4);
+		v.material += asfloat(vertices.Load3(address)) * barycentrics[i];
 	}
+	v.normal = normalize(v.normal);
 
 	return v;
 }

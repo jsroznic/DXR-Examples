@@ -63,23 +63,40 @@ float diffuseScalar(float3 normal, float3 lightDir, bool frontBackSame, int shad
 	return diffuse;
 }
 
+float specularScalar(float3 normal, float3 lightDir, float3 cameraDir, float power) {
+	/* Calculate Half-Angle Vector */
+	float3 halfVector = 0.5*(normalize(lightDir) + normalize(cameraDir));
+	halfVector = normalize(halfVector);
+
+	/* Basic Specular Shading */
+	float specular = dot(normalize(normal), halfVector);
+	if (specular < 0)
+		specular = 0;
+	specular = pow(specular, power);
+	return specular;
+}
+
 // ---[ Closest Hit Shader ]---
 
 [shader("closesthit")]
 void ClosestHit(inout HitInfo payload : SV_RayPayload,
 				Attributes attrib : SV_IntersectionAttributes)
 {
-	float3 staticPointLight = float3(-3.0f, 5.0f, -15.0f);
+	float3 staticPointLight = lightingInformation.xyz;
 	uint triangleIndex = PrimitiveIndex();
 	float3 barycentrics = float3((1.0f - attrib.uv.x - attrib.uv.y), attrib.uv.x, attrib.uv.y);
 	VertexAttributes vertex = GetVertexAttributes(triangleIndex, barycentrics);
+	float3 material = normalize(vertex.material);
 
 	//float3 color = albedo.Load(int3(coord, 0)).rgb;
 	float3 color = vertex.color;
 
-	float3 lightDir = normalize(staticPointLight - vertex.position);
+	float3 lightDir = staticPointLight - vertex.position;
+	float distToLight = length(lightDir);
+	lightDir = normalize(lightDir);
 
-	float diffuse = diffuseScalar(vertex.normal, lightDir, false, 1);
+	float diffuse = 0;
+	float specular = 0;
 
 	// Launch Shadow Ray
 	// Setup the ray
@@ -94,9 +111,11 @@ void ClosestHit(inout HitInfo payload : SV_RayPayload,
 	float3 cameraPos = payload.ShadedColorAndHitT.xyz;
 	float3 cameraDir = normalize(vertex.position - cameraPos);
 
-	bool reflective = color.x < 0 && color.y < 0 && color.z < 0;
+	float3 reflectionColor = float3(0, 0, 0);
+	float3 specularColor = vertex.color;
 
-	if (reflective) {
+	//Get Reflection Color
+	if (material.z > 0) {
 		if (payload.ShadedColorAndHitT.a < 10) {
 			ray.Direction = cameraDir - 2*vertex.normal*dot(cameraDir,vertex.normal);
 			TraceRay(
@@ -109,15 +128,17 @@ void ClosestHit(inout HitInfo payload : SV_RayPayload,
 				ray,
 				rayPayload);
 			//Color With info from Reflected Color
-			color = rayPayload.ShadedColorAndHitT.rgb;
-			diffuse = 1;
+			reflectionColor = rayPayload.ShadedColorAndHitT.rgb;
 		}
 		else {
-			color = float3(0, 0, 0);
+			reflectionColor = float3(0, 0, 0);
 		}
 	}
-	else {
+	//Get Diffuse Intensity
+	if(material.x > 0) {
+		diffuse = diffuseScalar(vertex.normal, lightDir, false, 1);
 		ray.Direction = lightDir;
+		ray.TMax = distToLight;
 		TraceRay(
 			SceneBVH,
 			RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH | RAY_FLAG_SKIP_CLOSEST_HIT_SHADER,
@@ -132,7 +153,12 @@ void ClosestHit(inout HitInfo payload : SV_RayPayload,
 			diffuse = 0.2;
 		}
 	}
+	//Get Specular Intensity
+	if (material.y > 0) {
+		specular = specularScalar(vertex.normal, lightDir, -cameraDir, 10);
+	}
 
+	color = material.x * diffuse * vertex.color + material.y * specular * specularColor + material.z * reflectionColor;
 	
-	payload.ShadedColorAndHitT = float4(color * diffuse, RayTCurrent());
+	payload.ShadedColorAndHitT = float4(color, RayTCurrent());
 }

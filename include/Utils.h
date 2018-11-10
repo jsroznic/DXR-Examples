@@ -45,7 +45,8 @@ namespace Utils
 	void LoadModel(string filepath, Model &model, Material &material);
 
 	void LoadCustomScene(Model &model, Material &material);
-	void LoadSphere(Model &model, Material &material, XMFLOAT3 position, float scale, XMFLOAT3 color);
+	void LoadCustomAdvancedScene(Model &model, Material &material);
+	void LoadSphere(Model &model, Material &material, XMFLOAT3 position, float scale, XMFLOAT3 color, XMFLOAT3 materialDesc);
 
 	void Validate(HRESULT hr, LPWSTR message);
 
