@@ -90,14 +90,14 @@ void ClosestHit(inout HitInfo payload : SV_RayPayload,
 
 	// Trace the shadow ray
 	HitInfo rayPayload;
-	rayPayload.ShadedColorAndHitT = float4(payload.ShadedColorAndHitT.x + 1, 0, 0, 0);
-	float3 cameraPos = float3(0, 0, 0);
+	rayPayload.ShadedColorAndHitT = float4(ray.Origin, payload.ShadedColorAndHitT.a + 1);
+	float3 cameraPos = payload.ShadedColorAndHitT.xyz;
 	float3 cameraDir = normalize(vertex.position - cameraPos);
 
 	bool reflective = color.x < 0 && color.y < 0 && color.z < 0;
 
 	if (reflective) {
-		if (payload.ShadedColorAndHitT.x < 10) {
+		if (payload.ShadedColorAndHitT.a < 10) {
 			ray.Direction = cameraDir - 2*vertex.normal*dot(cameraDir,vertex.normal);
 			TraceRay(
 				SceneBVH,
