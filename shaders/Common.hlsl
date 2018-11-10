@@ -32,11 +32,6 @@ struct HitInfo
 	float4 ShadedColorAndHitT : SHADED_COLOR_AND_HIT_T;
 };
 
-struct ShadowPayload
-{
-	float visibility; // 0.0 means ‘shadowed’, 1.0 means ‘lit’
-};
-
 struct Attributes {
 	float2 uv;
 };

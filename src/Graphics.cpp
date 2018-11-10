@@ -360,13 +360,22 @@ void Update_View_CB(D3D12Global &d3d, D3D12Resources &resources)
 	resources.eyeAngle.x += rotationSpeed;
 
 #if _DEBUG
+	//Moving Camera
+
+	//float x = 2.f * cosf(resources.eyeAngle.x);
+	//float y = 0.f;
+	//float z = 2.f * sinf(resources.eyeAngle.x) - 1;
+
+	float x = 8.f * cosf(resources.eyeAngle.x);
+	float y = 1.5f + 1.5f * cosf(resources.eyeAngle.x);
+	float z = 8.f + 2.25f * sinf(resources.eyeAngle.x);
+
 	//Force Static Camera
-	float x = 0.f;
-	float y = 0.f;
-	float z = 0.f;
-	/*float x = 2.f * cosf(resources.eyeAngle.x);
-	float y = 0.f;
-	float z = 2.25f + 2.f * sinf(resources.eyeAngle.x);*/
+	if (false) {
+		x = 0;
+		y = 0;
+		z = 0;
+	}
 	focus = XMFLOAT3(0.f, 0.f, -1.f);
 #else
 	float x = 8.f * cosf(resources.eyeAngle.x);
@@ -375,11 +384,13 @@ void Update_View_CB(D3D12Global &d3d, D3D12Resources &resources)
 	focus = XMFLOAT3(0.f, 1.75f, 0.f);
 #endif
 
+	
+
 	eye = XMFLOAT3(x, y, z);
 	up = XMFLOAT3(0.f, 1.f, 0.f);
 
 	aspect = (float)d3d.width / (float)d3d.height;
-	fov = 65.f * (XM_PI / 180.f);							// convert to radians
+	fov = 62.f * (XM_PI / 180.f);							// convert to radians
 
 	resources.rotationOffset += rotationSpeed;
 
@@ -1173,7 +1184,7 @@ void Create_Pipeline_State_Object(D3D12Global &d3d, DXRGlobal &dxr)
 
 	// Add a state subobject for the ray tracing pipeline config
 	D3D12_RAYTRACING_PIPELINE_CONFIG pipelineConfig = {};
-	pipelineConfig.MaxTraceRecursionDepth = 2;
+	pipelineConfig.MaxTraceRecursionDepth = 12;
 
 	D3D12_STATE_SUBOBJECT pipelineConfigObject = {};
 	pipelineConfigObject.Type = D3D12_STATE_SUBOBJECT_TYPE_RAYTRACING_PIPELINE_CONFIG;

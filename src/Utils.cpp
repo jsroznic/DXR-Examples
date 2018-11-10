@@ -257,8 +257,8 @@ void LoadCustomScene(Model &model, Material &material) {
 	model.indices.push_back(10);
 	model.indices.push_back(9);
 
-	LoadSphere(model, material, XMFLOAT3(0.0, 0.0, -16.0), 4, XMFLOAT3(1, 1, 1));
-	LoadSphere(model, material, XMFLOAT3(-3.0, -1.0, -14.0), 2, XMFLOAT3(1, 1, 1));
+	LoadSphere(model, material, XMFLOAT3(0.0, 0.0, -16.0), 4, XMFLOAT3(-1, -1, -1));
+	LoadSphere(model, material, XMFLOAT3(-3.0, -1.0, -14.0), 2, XMFLOAT3(-1, -1, -1));
 	LoadSphere(model, material, XMFLOAT3(3.0, -1.0, -14.0), 2, XMFLOAT3(1, 0, 0));
 }
 

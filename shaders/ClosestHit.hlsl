@@ -85,28 +85,54 @@ void ClosestHit(inout HitInfo payload : SV_RayPayload,
 	// Setup the ray
 	RayDesc ray;
 	ray.Origin = vertex.position;
-	ray.Direction = lightDir;
 	ray.TMin = 0.001f;
 	ray.TMax = 1000.f;
 
 	// Trace the shadow ray
-	HitInfo shadowPayload;
-	shadowPayload.ShadedColorAndHitT = float4(0, 0, 0, 0);
+	HitInfo rayPayload;
+	rayPayload.ShadedColorAndHitT = float4(payload.ShadedColorAndHitT.x + 1, 0, 0, 0);
+	float3 cameraPos = float3(0, 0, 0);
+	float3 cameraDir = normalize(vertex.position - cameraPos);
 
-	TraceRay(
-		SceneBVH,
-		RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH | RAY_FLAG_SKIP_CLOSEST_HIT_SHADER,
-		0xFF,
-		0,
-		0,
-		0,
-		ray,
-		shadowPayload);
+	bool reflective = color.x < 0 && color.y < 0 && color.z < 0;
 
-	//Ray Intersection
-	if (shadowPayload.ShadedColorAndHitT.a >= 0) {
-		diffuse = 0.2;
+	if (reflective) {
+		if (payload.ShadedColorAndHitT.x < 10) {
+			ray.Direction = cameraDir - 2*vertex.normal*dot(cameraDir,vertex.normal);
+			TraceRay(
+				SceneBVH,
+				RAY_FLAG_NONE,
+				0xFF,
+				0,
+				0,
+				0,
+				ray,
+				rayPayload);
+			//Color With info from Reflected Color
+			color = rayPayload.ShadedColorAndHitT.rgb;
+			diffuse = 1;
+		}
+		else {
+			color = float3(0, 0, 0);
+		}
+	}
+	else {
+		ray.Direction = lightDir;
+		TraceRay(
+			SceneBVH,
+			RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH | RAY_FLAG_SKIP_CLOSEST_HIT_SHADER,
+			0xFF,
+			0,
+			0,
+			0,
+			ray,
+			rayPayload);
+		//Ray Intersection
+		if (rayPayload.ShadedColorAndHitT.a >= 0) {
+			diffuse = 0.2;
+		}
 	}
 
+	
 	payload.ShadedColorAndHitT = float4(color * diffuse, RayTCurrent());
 }
