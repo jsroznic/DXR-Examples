@@ -54,12 +54,16 @@ struct ConfigInfo {
 	int			height;
 	string		model;
 	HINSTANCE	instance;
+	double ElapsedTime;
+	double TotalTime;
 
 	ConfigInfo() {
 		width = 640;
 		height = 360;
 		model = "";
 		instance = NULL;
+		ElapsedTime = 0;
+		TotalTime = 0;
 	}
 };
 

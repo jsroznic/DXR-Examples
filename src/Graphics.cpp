@@ -358,7 +358,8 @@ void Update_View_CB(D3D12Global &d3d, D3D12Resources &resources, ConfigInfo &con
 	XMFLOAT4 lighting;
 	float aspect, fov;
 
-	resources.eyeAngle.x += rotationSpeed;
+	resources.eyeAngle.x += 60 * rotationSpeed * config.ElapsedTime;
+	//resources.eyeAngle.x += rotationSpeed;
 
 #if _DEBUG
 	//Moving Camera
@@ -409,7 +410,7 @@ void Update_View_CB(D3D12Global &d3d, D3D12Resources &resources, ConfigInfo &con
 	aspect = (float)d3d.width / (float)d3d.height;
 	fov = 62.f * (XM_PI / 180.f);							// convert to radians
 
-	resources.rotationOffset += rotationSpeed;
+	resources.rotationOffset += 60 * rotationSpeed * config.ElapsedTime;
 
 	view = XMMatrixLookAtLH(XMLoadFloat3(&eye), XMLoadFloat3(&focus), XMLoadFloat3(&up));
 	invView = XMMatrixInverse(NULL, view);
@@ -669,6 +670,7 @@ void Create_SwapChain(D3D12Global &d3d, HWND window)
 	desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 	desc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 	desc.SampleDesc.Count = 1;
+	desc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
 
 	IDXGISwapChain1* swapChain;
 
@@ -741,7 +743,10 @@ void Submit_CmdList(D3D12Global &d3d)
  */
 void Present(D3D12Global &d3d) 
 {
-	HRESULT hr = d3d.swapChain->Present(1, 0);
+	bool vsync = false;
+	UINT syncInterval = vsync ? 1 : 0;
+	UINT presentFlags = !vsync ? DXGI_PRESENT_ALLOW_TEARING : 0;
+	HRESULT hr = d3d.swapChain->Present(syncInterval, presentFlags);
 	if (FAILED(hr))
 	{
 		hr = d3d.device->GetDeviceRemovedReason();

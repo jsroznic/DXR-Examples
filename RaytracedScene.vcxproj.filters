@@ -30,6 +30,12 @@
     <ClCompile Include="src\Graphics.cpp">
       <Filter>Source</Filter>
     </ClCompile>
+    <ClCompile Include="src\HighResolutionClock.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\DX12LibPCH.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shaders\ClosestHit.hlsl">
@@ -75,6 +81,12 @@
     </ClInclude>
     <ClInclude Include="include\thirdparty\d3dx12.h">
       <Filter>Include\thirdparty</Filter>
+    </ClInclude>
+    <ClInclude Include="include\HighResolutionClock.h">
+      <Filter>Include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\DX12LibPCH.h">
+      <Filter>Include</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

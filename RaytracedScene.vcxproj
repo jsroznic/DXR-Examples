@@ -11,7 +11,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\DX12LibPCH.cpp" />
     <ClCompile Include="src\Graphics.cpp" />
+    <ClCompile Include="src\HighResolutionClock.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\Utils.cpp" />
     <ClCompile Include="src\Window.cpp" />
@@ -36,7 +38,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Common.h" />
+    <ClInclude Include="include\DX12LibPCH.h" />
     <ClInclude Include="include\Graphics.h" />
+    <ClInclude Include="include\HighResolutionClock.h" />
     <ClInclude Include="include\Structures.h" />
     <ClInclude Include="include\thirdparty\d3dx12.h" />
     <ClInclude Include="include\thirdparty\dxc\dxcapi.h" />

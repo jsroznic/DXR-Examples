@@ -35,6 +35,7 @@
 #define _CRTDBG_MAP_ALLOC
 #include <stdlib.h>
 #include <crtdbg.h>
+#include <HighResolutionClock.h>
 #endif
 
 /**
@@ -42,6 +43,10 @@
  */
 class DXRApplication 
 {
+	HighResolutionClock m_UpdateClock;
+	uint64_t m_FrameCounter = 0;
+	double printFPSTime = 0;
+
 public:
 	
 	void Init(ConfigInfo &config) 
@@ -58,9 +63,12 @@ public:
 		if (config.model == "custom") {
 			Utils::LoadCustomAdvancedScene(model, material);
 		}
+		else if (config.model == "reference") {
+			Utils::LoadCustomScene(model, material);
+		}
 		//Reference Scene
 		else {
-			Utils::LoadCustomScene(model, material);
+			//Utils::LoadModel(config.model, model, material);
 		}
 		
 
@@ -106,6 +114,19 @@ public:
 	
 	void Update(ConfigInfo &config)
 	{
+		m_UpdateClock.Tick();
+		m_FrameCounter++;
+		config.ElapsedTime = m_UpdateClock.GetDeltaSeconds();
+		config.TotalTime = m_UpdateClock.GetTotalSeconds();
+		printFPSTime += config.ElapsedTime;
+		if (printFPSTime > 1) {
+			char buffer[256];
+			sprintf_s(buffer, "******* FPS: %.0f *******\n", m_FrameCounter / printFPSTime);
+			OutputDebugStringA(buffer);
+			printFPSTime = 0;
+			m_FrameCounter = 0;
+		}
+
 		D3DResources::Update_View_CB(d3d, resources, config);
 	}
 

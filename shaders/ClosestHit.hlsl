@@ -111,6 +111,10 @@ void ClosestHit(inout HitInfo payload : SV_RayPayload,
 	float3 cameraPos = payload.ShadedColorAndHitT.xyz;
 	float3 cameraDir = normalize(vertex.position - cameraPos);
 
+	if (dot(cameraDir, vertex.normal) > 0) {
+		vertex.normal = -vertex.normal;
+	}
+
 	float3 reflectionColor = float3(0, 0, 0);
 	float3 specularColor = vertex.color;
 
