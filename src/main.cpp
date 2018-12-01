@@ -30,13 +30,14 @@
 
 #include "Window.h"
 #include "Graphics.h"
+#include "InputState.h"
 
 #ifdef _DEBUG
 #define _CRTDBG_MAP_ALLOC
 #include <stdlib.h>
 #include <crtdbg.h>
-#include <HighResolutionClock.h>
 #endif
+#include <HighResolutionClock.h>
 
 /**
  * Your ray tracing application!
@@ -46,6 +47,7 @@ class DXRApplication
 	HighResolutionClock m_UpdateClock;
 	uint64_t m_FrameCounter = 0;
 	double printFPSTime = 0;
+	int vertexCount = 0;
 
 public:
 	
@@ -54,24 +56,30 @@ public:
 		// Create a new window
 		HRESULT hr = Window::Create(config.width, config.height, config.instance, window, L"DirectX Raytracing - Introductory Scene");
 		Utils::Validate(hr, L"Error: failed to create window!");
+		d3d.tearingSupported = CheckTearingSupport();
+
+		InputSpace::InputState::SetTearingSupport(d3d.tearingSupported);
+		InputSpace::InputState::Reset();
 
 		d3d.width = config.width;
 		d3d.height = config.height;
 
 		// Load a model
-		//Custom Scene
+		// Custom Scene
 		if (config.model == "custom") {
 			Utils::LoadCustomAdvancedScene(model, material);
 		}
+		//Reference Scene
 		else if (config.model == "reference") {
 			Utils::LoadCustomScene(model, material);
 		}
-		//Reference Scene
+		//Model Scene
 		else {
-			//Utils::LoadModel(config.model, model, material);
+			Utils::LoadModel(config.model, model, material);
 		}
-		
 
+		vertexCount = model.vertices.size();
+		
 		// Initialize the shader compiler
 		D3DShaders::Init_Shader_Compiler(shaderCompiler);
 
@@ -90,6 +98,8 @@ public:
 		D3DResources::Create_Samplers(d3d, resources);		
 		D3DResources::Create_Vertex_Buffer(d3d, resources, model);
 		D3DResources::Create_Index_Buffer(d3d, resources, model);
+		if(material.texturePath.length() > 0)
+			D3DResources::Create_Texture(d3d, resources, material);
 		D3DResources::Create_View_CB(d3d, resources);
 		D3DResources::Create_Lighting_CB(d3d, resources, material);
 		
@@ -119,10 +129,11 @@ public:
 		config.ElapsedTime = m_UpdateClock.GetDeltaSeconds();
 		config.TotalTime = m_UpdateClock.GetTotalSeconds();
 		printFPSTime += config.ElapsedTime;
+
 		if (printFPSTime > 1) {
 			char buffer[256];
-			sprintf_s(buffer, "******* FPS: %.0f *******\n", m_FrameCounter / printFPSTime);
-			OutputDebugStringA(buffer);
+			sprintf_s(buffer, "DirectX Raytracing - %c%s Scene: Vertices: %d | FPS: %.0f | Vsync: %s\n", toupper(config.model[0]), config.model.substr(1).c_str(), vertexCount, m_FrameCounter / printFPSTime, InputSpace::InputState::GetVsync() ? "On" : "Off");
+			SetWindowTextA(window, buffer);
 			printFPSTime = 0;
 			m_FrameCounter = 0;
 		}
@@ -149,6 +160,28 @@ public:
 		D3D12::Destroy(d3d);
 
 		DestroyWindow(window);
+	}
+
+	bool CheckTearingSupport()
+	{
+		BOOL allowTearing = FALSE;
+
+		// Rather than create the DXGI 1.5 factory interface directly, we create the
+		// DXGI 1.4 interface and query for the 1.5 interface. This is to enable the 
+		// graphics debugging tools which will not support the 1.5 factory interface 
+		// until a future update.
+		ComPtr<IDXGIFactory4> factory4;
+		if (SUCCEEDED(CreateDXGIFactory1(IID_PPV_ARGS(&factory4))))
+		{
+			ComPtr<IDXGIFactory5> factory5;
+			if (SUCCEEDED(factory4.As(&factory5)))
+			{
+				factory5->CheckFeatureSupport(DXGI_FEATURE_PRESENT_ALLOW_TEARING,
+					&allowTearing, sizeof(allowTearing));
+			}
+		}
+
+		return allowTearing == TRUE;
 	}
 	
 private:

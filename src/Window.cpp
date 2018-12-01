@@ -26,6 +26,10 @@
  */
 
 #include "Window.h"
+#include "InputState.h"
+#include "KeyCodes.h"
+
+using namespace InputSpace;
 
 /**
  * Windows message loop.
@@ -42,6 +46,20 @@ LRESULT CALLBACK WndProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam 
         case WM_DESTROY:
             PostQuitMessage( 0 );
             break;
+		case WM_KEYDOWN:
+			InputState::SetKey((KeyCode::Key)wParam, true);
+			break;
+		case WM_KEYUP:
+			InputState::SetKey((KeyCode::Key)wParam, false);
+			break;
+		case WM_LBUTTONDOWN:
+			SetCapture(hWnd);
+			InputState::SetMouseEvent(wParam, lParam);
+		break;
+		case WM_LBUTTONUP:
+			InputState::SetMouseEvent(wParam, lParam);
+			ReleaseCapture();
+		break;
         default:
             return DefWindowProc( hWnd, message, wParam, lParam );
     }

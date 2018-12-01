@@ -88,8 +88,15 @@ void ClosestHit(inout HitInfo payload : SV_RayPayload,
 	VertexAttributes vertex = GetVertexAttributes(triangleIndex, barycentrics);
 	float3 material = normalize(vertex.material);
 
-	//float3 color = albedo.Load(int3(coord, 0)).rgb;
-	float3 color = vertex.color;
+	float3 color;
+	float3 vertexColor;
+	if (vertex.color.x > 1.5) {
+		int2 coord = floor(vertex.color.yz * textureResolution.x);
+		vertexColor = albedo.Load(int3(coord, 0)).rgb;
+	}
+	else {
+		vertexColor = vertex.color;
+	}
 
 	float3 lightDir = staticPointLight - vertex.position;
 	float distToLight = length(lightDir);
@@ -116,7 +123,7 @@ void ClosestHit(inout HitInfo payload : SV_RayPayload,
 	}
 
 	float3 reflectionColor = float3(0, 0, 0);
-	float3 specularColor = vertex.color;
+	float3 specularColor = vertexColor;
 
 	//Get Reflection Color
 	if (material.z > 0) {
@@ -162,7 +169,7 @@ void ClosestHit(inout HitInfo payload : SV_RayPayload,
 		specular = specularScalar(vertex.normal, lightDir, -cameraDir, 10);
 	}
 
-	color = material.x * diffuse * vertex.color + material.y * specular * specularColor + material.z * reflectionColor;
-	
+	color = material.x * diffuse * vertexColor + material.y * specular * specularColor + material.z * reflectionColor;
+
 	payload.ShadedColorAndHitT = float4(color, RayTCurrent());
 }

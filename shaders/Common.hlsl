@@ -48,6 +48,7 @@ cbuffer ViewCB : register(b0)
 cbuffer LightingCB : register(b1)
 {
 	float4 lightingInformation;
+	float4 textureResolution;
 };
 
 // ---[ Resources ]---

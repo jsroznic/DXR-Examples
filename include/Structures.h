@@ -76,14 +76,8 @@ struct Vertex
 
 	bool operator==(const Vertex &v) const {
 		if (CompareVector3WithEpsilon(position, v.position)) {
-			if (CompareVector3WithEpsilon(color, v.color)) {
-				if (CompareVector3WithEpsilon(normal, v.normal)) {
-					if (CompareVector3WithEpsilon(material, v.normal)) return true;
-					return false;
-				}
-				return false;
-			}
-			return false;
+			if (CompareVector3WithEpsilon(color, v.color)) return true;
+			return true;
 		}
 		return false;
 	}
@@ -125,6 +119,7 @@ struct TextureInfo
 
 struct LightingCB {
 	XMFLOAT4 lightingInformation;
+	XMFLOAT4 textureResolution;
 };
 
 struct ViewCB
@@ -272,6 +267,8 @@ struct D3D12Global
 
 	int												width;
 	int												height;
+
+	bool											tearingSupported;
 };
 
 //--------------------------------------------------------------------------------------

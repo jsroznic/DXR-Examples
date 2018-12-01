@@ -26,10 +26,13 @@
  */
 
 #include "Graphics.h"
+#include "InputState.h"
 
 //--------------------------------------------------------------------------------------
 // Resource Functions
 //--------------------------------------------------------------------------------------
+
+using namespace InputSpace;
 
 namespace D3DResources
 {
@@ -312,6 +315,7 @@ void Create_Lighting_CB(D3D12Global &d3d, D3D12Resources &resources, const Mater
 	Create_Constant_Buffer(d3d, &resources.lightingCB, sizeof(LightingCB));
 
 	resources.lightingCBData.lightingInformation = XMFLOAT4(-3.0f, 5.0f, -15.0f, 0.0f);
+	resources.lightingCBData.textureResolution = XMFLOAT4(material.textureResolution, 0.f, 0.f, 0.f);
 
 	HRESULT hr = resources.lightingCB->Map(0, nullptr, reinterpret_cast<void**>(&resources.lightingCBStart));
 	Utils::Validate(hr, L"Error: failed to map Lighting constant buffer!");
@@ -359,7 +363,6 @@ void Update_View_CB(D3D12Global &d3d, D3D12Resources &resources, ConfigInfo &con
 	float aspect, fov;
 
 	resources.eyeAngle.x += 60 * rotationSpeed * config.ElapsedTime;
-	//resources.eyeAngle.x += rotationSpeed;
 
 #if _DEBUG
 	//Moving Camera
@@ -383,8 +386,11 @@ void Update_View_CB(D3D12Global &d3d, D3D12Resources &resources, ConfigInfo &con
 	if (config.model == "custom") {
 		lighting = XMFLOAT4(5 * cos(-3 * resources.eyeAngle.x), 1, -5, 0.0f);
 	}
-	else {
+	else if(config.model == "reference") {
 		lighting = XMFLOAT4(5 * cos(-3 * resources.eyeAngle.x), 5, -15, 0.0f);
+	}
+	else {
+		lighting = XMFLOAT4(5 * cos(-3 * resources.eyeAngle.x), 1, 0, 0.0f);
 	}
 	
 	//Force Static Lighting
@@ -405,6 +411,11 @@ void Update_View_CB(D3D12Global &d3d, D3D12Resources &resources, ConfigInfo &con
 #endif
 
 	eye = XMFLOAT3(x, y, z);
+	if (!InputState::GetScriptedCam()) {
+		CameraInfo cam = InputState::GetCamera(config.ElapsedTime);
+		eye = cam.position;
+		focus = XMFLOAT3(cam.position.x + cam.lookVector.x, cam.position.y + cam.lookVector.y, cam.position.z + cam.lookVector.z);
+	}
 	up = XMFLOAT3(0.f, 1.f, 0.f);
 
 	aspect = (float)d3d.width / (float)d3d.height;
@@ -743,9 +754,9 @@ void Submit_CmdList(D3D12Global &d3d)
  */
 void Present(D3D12Global &d3d) 
 {
-	bool vsync = false;
+	bool vsync = InputState::GetVsync();
 	UINT syncInterval = vsync ? 1 : 0;
-	UINT presentFlags = !vsync ? DXGI_PRESENT_ALLOW_TEARING : 0;
+	UINT presentFlags = d3d.tearingSupported && !vsync ? DXGI_PRESENT_ALLOW_TEARING : 0;
 	HRESULT hr = d3d.swapChain->Present(syncInterval, presentFlags);
 	if (FAILED(hr))
 	{

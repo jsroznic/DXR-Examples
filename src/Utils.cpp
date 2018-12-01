@@ -173,8 +173,14 @@ void LoadModel(string filepath, Model &model, Material &material)
 
 	// Get the first material
 	// Only support a single material right now
-	material.name = materials[0].name;
-	material.texturePath = materials[0].diffuse_texname;
+	if (materials.size() > 0) {
+		material.name = materials[0].name;
+		material.texturePath = materials[0].diffuse_texname;
+	}
+	else {
+		material.name = "defaultMaterial";
+		material.texturePath = "";
+	}
 
 	// Parse the model and store the unique vertices
 	unordered_map<Vertex, uint32_t> uniqueVertices = {};
@@ -182,19 +188,24 @@ void LoadModel(string filepath, Model &model, Material &material)
 	{
 		for (const auto &index : shape.mesh.indices) 
 		{
-			Vertex vertex = {};
-			vertex.position = 
-			{
-				attrib.vertices[3 * index.vertex_index + 2],				
-				attrib.vertices[3 * index.vertex_index + 1],
-				attrib.vertices[3 * index.vertex_index + 0]								
+			Vertex vertex = {
+				XMFLOAT3(//Position
+					attrib.vertices[3 * index.vertex_index + 2],
+					attrib.vertices[3 * index.vertex_index + 1],
+					attrib.vertices[3 * index.vertex_index + 0]),
+				XMFLOAT3(//Color
+					2,
+					1.f - attrib.texcoords[2 * index.texcoord_index + 0],
+					attrib.texcoords[2 * index.texcoord_index + 1]),
+				index.normal_index >= 0 ?
+				XMFLOAT3(//Normal
+					attrib.normals[3 * index.normal_index + 2],
+					attrib.normals[3 * index.normal_index + 1],
+					attrib.normals[3 * index.normal_index + 0]
+				)
+				: XMFLOAT3(0,0,1),
+				XMFLOAT3(1, 1, 0)//Material
 			};
-
-			/*vertex.uv = 
-			{
-				1.f - attrib.texcoords[2 * index.texcoord_index + 0],
-				attrib.texcoords[2 * index.texcoord_index + 1]
-			};*/
 
 			// Fast find unique vertices using a hash
 			if (uniqueVertices.count(vertex) == 0) 

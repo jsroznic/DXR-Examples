@@ -36,6 +36,9 @@
     <ClCompile Include="src\DX12LibPCH.cpp">
       <Filter>Source</Filter>
     </ClCompile>
+    <ClCompile Include="src\InputState.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shaders\ClosestHit.hlsl">
@@ -86,6 +89,12 @@
       <Filter>Include</Filter>
     </ClInclude>
     <ClInclude Include="include\DX12LibPCH.h">
+      <Filter>Include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\InputState.h">
+      <Filter>Include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\KeyCodes.h">
       <Filter>Include</Filter>
     </ClInclude>
   </ItemGroup>
